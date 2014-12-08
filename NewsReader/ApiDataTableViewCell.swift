@@ -28,6 +28,7 @@ class ApiDataTableViewCell: UITableViewCell {
     @IBOutlet var okashiMaker: UILabel!
     @IBOutlet var okashiCategory: UILabel!
     @IBOutlet var okashiPrice: UILabel!
+    @IBOutlet var okashiImage: UIImageView!
     
     override func awakeFromNib() {
         super.awakeFromNib()

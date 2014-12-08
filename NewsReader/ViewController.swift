@@ -124,6 +124,32 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             cell.okashiPrice?.text = "-"
         }
         
+        //画像 ※image要素のデータを取得した後にnilの可能性をチェック
+        //
+        var q_global: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        var q_main: dispatch_queue_t   = dispatch_get_main_queue();
+        
+        //非同期でURLデータを取得
+        dispatch_async(q_global, {
+            
+            //サムネイルのURLをもとに画像データ(NSData型)を作成
+            var imageURL = NSURL(string: item.thumb as String)?
+            var imageData = NSData(contentsOfURL: imageURL!)
+            
+            //更新はメインスレッドで行う
+            dispatch_async(q_main, {
+                
+                //イメージデータがnilでなければサムネイル画像を表示
+                if((imageData) != nil){
+                    
+                    //xibのサムネイルエリアに表示する
+                    var image: UIImage = UIImage(data: imageData!)!
+                    cell.okashiImage?.image = image
+                    cell.layoutSubviews()
+                }
+            })
+        })
+        
         //セルの右に矢印をつけてあげる
         cell.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator;
         
@@ -189,6 +215,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     let priceElementName:String = "price"
     let typeElementName:String  = "type"
     let urlElementName:String   = "url"
+    let imageElementName:String = "image"
     
     //※XMLの中身がどのような構造をしているのかは下記のURLを直接たたいて確認をしてみてください
     //http://www.sysbird.jp/webapi/?apikey=guest&max=30&order=r
@@ -227,7 +254,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     //XMLパース処理実行中に行う処理
-    //item要素内からさらにname・url・price・make要素を見つけてitem要素を見つけた際に用意した入れ物に入れてあげる
+    //item要素内からさらにname・url・price・maker・url・image要素を見つけてitem要素を見つけた際に用意した入れ物に入れてあげる
     func parser(parser: NSXMLParser!, foundCharacters string: String!){
         
         //itemsの中に空っぽの入れ物が準備できている場合の処理
@@ -262,6 +289,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 //price要素を入れる
                 lastItem.price = string
                 
+            } else if currentElementName? == imageElementName {
+                
+                //image要素を入れる
+                lastItem.thumb = string
+                
             }
         }
     }
@@ -282,6 +314,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         var price: String! //item要素の下のprice要素を入れる
         var type:  String! //item要素の下のtype要素を入れる
         var url:   String! //item要素の下のurl要素を入れる
+        var thumb: String! //item要素の下のimage要素を入れる
     }
     
     override func didReceiveMemoryWarning() {
