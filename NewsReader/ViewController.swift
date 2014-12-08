@@ -125,30 +125,35 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }
         
         //画像 ※image要素のデータを取得した後にnilの可能性をチェック
-        //
         var q_global: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
         var q_main: dispatch_queue_t   = dispatch_get_main_queue();
         
-        //非同期でURLデータを取得
-        dispatch_async(q_global, {
+        //サムネイルのURLをもとに画像データ(NSData型)を作成
+        var imageURL = NSURL(string: item.thumb as String)?
+        
+        //URLがあれば画像取得処理を実行
+        if((imageURL) != nil){
             
-            //サムネイルのURLをもとに画像データ(NSData型)を作成
-            var imageURL = NSURL(string: item.thumb as String)?
-            var imageData = NSData(contentsOfURL: imageURL!)
-            
-            //更新はメインスレッドで行う
-            dispatch_async(q_main, {
+            //非同期でURLデータを取得
+            dispatch_async(q_global, {
                 
-                //イメージデータがnilでなければサムネイル画像を表示
-                if((imageData) != nil){
+                //サムネイルのURLをもとに画像データ(NSData型)を作成
+                var imageData = NSData(contentsOfURL: imageURL!)
+                
+                //更新はメインスレッドで行う
+                dispatch_async(q_main, {
                     
-                    //xibのサムネイルエリアに表示する
-                    var image: UIImage = UIImage(data: imageData!)!
-                    cell.okashiImage?.image = image
-                    cell.layoutSubviews()
-                }
+                    //イメージデータがnilでなければサムネイル画像を表示
+                    if((imageData) != nil){
+                        
+                        //xibのサムネイルエリアに表示する
+                        var image: UIImage = UIImage(data: imageData!)!
+                        cell.okashiImage?.image = image
+                        cell.layoutSubviews()
+                    }
+                })
             })
-        })
+        }
         
         //セルの右に矢印をつけてあげる
         cell.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator;
