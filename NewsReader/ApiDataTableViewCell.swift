@@ -17,6 +17,9 @@ ApiDataTableViewCell →
 1. ViewControllerのTableViewへ読み込むセルになります
 
 ※ラベルの配色やフォントの変更も可能です
+
+＜更新情報＞
+2015/01/13: テーブルセルの暫定デバイス対応
 ---------------------------- */
 
 import UIKit
@@ -30,9 +33,46 @@ class ApiDataTableViewCell: UITableViewCell {
     @IBOutlet var okashiPrice: UILabel!
     @IBOutlet var okashiImage: UIImageView!
     
+    //カレンダーの位置決め用メンバ変数
+    var okashiNameLabelWidth: Int!
+    var okashiMakerLabelWidth: Int!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
+        
+        //現在起動中のデバイスを取得（スクリーンの幅・高さ）
+        let screenWidth = Int(UIScreen.mainScreen().bounds.size.width)
+        let screenHeight = Int(UIScreen.mainScreen().bounds.size.height)
+        
+        //iPhone4s
+        if(screenWidth == 320 && screenHeight == 480){
+            
+            okashiNameLabelWidth  = 204;
+            okashiMakerLabelWidth = 204;
+            
+        //iPhone5またはiPhone5s
+        }else if (screenWidth == 320 && screenHeight == 568){
+            
+            okashiNameLabelWidth  = 204;
+            okashiMakerLabelWidth = 204;
+            
+        //iPhone6
+        }else if (screenWidth == 375 && screenHeight == 667){
+            
+            okashiNameLabelWidth  = 259;
+            okashiMakerLabelWidth = 259;
+            
+        //iPhone6 plus
+        }else if (screenWidth == 414 && screenHeight == 736){
+            
+            okashiNameLabelWidth  = 298;
+            okashiMakerLabelWidth = 298;
+        }
+        
+        //表示用ラベルのフィックスをする
+        self.okashiName.frame = CGRectMake(85, 8, CGFloat(okashiNameLabelWidth), 23);
+        self.okashiMaker.frame = CGRectMake(85, 30, CGFloat(okashiMakerLabelWidth), 21);
     }
 
     override func setSelected(selected: Bool, animated: Bool) {

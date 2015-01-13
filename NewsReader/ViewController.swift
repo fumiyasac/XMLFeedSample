@@ -22,6 +22,9 @@ ViewController →
 2. セルをタップすると詳細画面へ遷移
 
 ※セルをタップするとSafariが開くも可能です。
+
+＜更新情報＞
+2015/01/13: AutoResizing対応と画像がnilになった際の対応
 ---------------------------- */
 
 import UIKit
@@ -132,16 +135,16 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         var imageURL = NSURL(string: item.thumb as String)?
         
         //URLがあれば画像取得処理を実行
-        if((imageURL) != nil){
+        if(imageURL != nil){
             
             //非同期でURLデータを取得
-            dispatch_async(q_global, {
+            dispatch_async(q_global,{
                 
                 //サムネイルのURLをもとに画像データ(NSData型)を作成
                 var imageData = NSData(contentsOfURL: imageURL!)
                 
                 //更新はメインスレッドで行う
-                dispatch_async(q_main, {
+                dispatch_async(q_main,{
                     
                     //イメージデータがnilでなければサムネイル画像を表示
                     if((imageData) != nil){
@@ -153,6 +156,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     }
                 })
             })
+            
+        }else{
+            
+            //nilの時はデフォルトイメージを表示してあげる
+            var image: UIImage = UIImage(named: "no_image.gif")!
+            cell.okashiImage?.image = image
+            
         }
         
         //セルの右に矢印をつけてあげる
@@ -229,7 +239,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func parserDidStartDocument(parser: NSXMLParser!) {
     }
     
-    //fun parse()についてはオーバーロード（名前は一緒なんだけど引数の型が違う）してます
+    //func parse()についてはオーバーロード（名前は一緒なんだけど引数の型が違う）してます
     
     //XMLパース処理実行中に行う処理
     //item要素を見つける ※上から順番に調べていくイメージです

@@ -16,6 +16,9 @@ DetailViewController →
 
 1. ViewControllerから渡ってきたAPIに記載されているURLを表示
 2. 戻るボタンを押すと一覧に戻ります。
+
+＜更新情報＞
+2015/01/13: AutoResizing対応
 ---------------------------- */
 
 import UIKit
