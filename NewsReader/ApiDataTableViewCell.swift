@@ -20,6 +20,7 @@ ApiDataTableViewCell →
 
 ＜更新情報＞
 2015/01/13: テーブルセルの暫定デバイス対応
+2015/01/15: 暫定デバイス対応でおかしな所があったので修正
 ---------------------------- */
 
 import UIKit
@@ -42,8 +43,8 @@ class ApiDataTableViewCell: UITableViewCell {
         // Initialization code
         
         //現在起動中のデバイスを取得（スクリーンの幅・高さ）
-        let screenWidth = Int(UIScreen.mainScreen().bounds.size.width)
-        let screenHeight = Int(UIScreen.mainScreen().bounds.size.height)
+        let screenWidth  = DeviseSize.screenWidth()
+        let screenHeight = DeviseSize.screenHeight()
         
         //iPhone4s
         if(screenWidth == 320 && screenHeight == 480){
