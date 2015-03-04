@@ -131,11 +131,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         var q_global: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
         var q_main: dispatch_queue_t   = dispatch_get_main_queue();
         
-        //サムネイルのURLをもとに画像データ(NSData型)を作成
-        var imageURL = NSURL(string: item.thumb as String)?
-        
         //URLがあれば画像取得処理を実行
-        if(imageURL != nil){
+        if(item.thumb != nil){
+            
+            //サムネイルのURLをもとに画像データ(NSData型)を作成
+            var imageURL = NSURL(string: item.thumb as String)?
             
             //非同期でURLデータを取得
             dispatch_async(q_global,{
@@ -239,9 +239,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func parserDidStartDocument(parser: NSXMLParser!) {
     }
     
-    //func parse()についてはオーバーロード（名前は一緒なんだけど引数の型が違う）してます
-    
-    //XMLパース処理実行中に行う処理
+    //XMLパース処理実行中に行う処理（タグの最初を検出）
     //item要素を見つける ※上から順番に調べていくイメージです
     func parser(parser: NSXMLParser!, didStartElement elementName: String!, namespaceURI: String!, qualifiedName qName: String!, attributes attributeDict: NSDictionary!) {
         
@@ -261,14 +259,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }
     }
     
-    //XMLパース処理実行中に行う処理
+    //XMLパース処理実行中に行う処理（タグの最後を検出）
     func parser(parser: NSXMLParser!, didEndElement elementName: String!, namespaceURI: String!, qualifiedName qName: String!) {
         
         currentElementName = nil;
-        
     }
     
-    //XMLパース処理実行中に行う処理
+    //XMLパース処理実行中に行う処理（実際のパース処理）
     //item要素内からさらにname・url・price・maker・url・image要素を見つけてitem要素を見つけた際に用意した入れ物に入れてあげる
     func parser(parser: NSXMLParser!, foundCharacters string: String!){
         
