@@ -25,134 +25,171 @@ ViewController →
 
 ＜更新情報＞
 2015/01/13: AutoResizing対応と画像がnilになった際の対応
+2015/07/11: NSXMLParserの仕様変更による改修
+
+(Old)
+parser(parser: NSXMLParser!, didStartElement elementName: String!, namespaceURI: String!, qualifiedName qName: String!, attributes attributeDict: NSDictionary!)
+
+(New)
+parser(parser: NSXMLParser!, didStartElement elementName: String!, namespaceURI: String!, qualifiedName qName: String!, attributes attributeDict: [NSObject : AnyObject]!)
 ---------------------------- */
 
 import UIKit
 
 //デリゲートを追加しておく（今回はUIViewControllerを使っているので、テーブルビューとXMLパーサのデリゲートを設定）
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, NSXMLParserDelegate {
-    
+
     //フィード表示用のテーブルビュー
     @IBOutlet var feedTableView: UITableView!
-    
+
     //テーブルビューの要素数(今回は決めうちだからこれで)
     let sectionCount: Int = 1
-    
+
     //テーブルビューセルの高さ(Xibのサイズに合わせるのが理想)
     let tableViewCellHeight: CGFloat = 80.0
-    
+
     //XMLのフィードURL
     let feedUrl : NSURL = NSURL(string:"http://www.sysbird.jp/webapi/?apikey=guest&max=30&order=r")!
-    
-    //Itemクラスのインスタンス
-    var items : [Item] = [Item]()
-    
+
+    //XMLをパースする処理
+    var currentElementName : String!
+
+    //取得する要素名の決定(とりはじめの要素)
+    let itemElementName : String  = "item"
+
+    //取得する要素名の決定(item要素の下にあるもの)
+    let nameElementName : String  = "name"
+    let makerElementName : String = "maker"
+    let priceElementName : String = "price"
+    let typeElementName : String  = "type"
+    let urlElementName : String   = "url"
+    let imageElementName : String = "image"
+
+    //各エレメント用の変数
+    var posts = NSMutableArray()
+    var elements = NSMutableDictionary()
+    var element = NSString()
+    var name = NSMutableString()
+    var maker = NSMutableString()
+    var price = NSMutableString()
+    var type = NSMutableString()
+    var url = NSMutableString()
+    var image = NSMutableString()
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        //入れ物を作る
+        posts = []
+
         //tableViewデリゲート
         self.feedTableView.delegate = self
         self.feedTableView.dataSource = self
-        
+
         //Xibのクラスを読み込む宣言を行う
         var nib:UINib = UINib(nibName: "ApiDataTableViewCell", bundle: nil)
         self.feedTableView.registerNib(nib, forCellReuseIdentifier: "apiDataCell")
-        
+
         //NSXMLParserクラスのインスタンスを準備
         var parser : NSXMLParser = NSXMLParser(contentsOfURL: feedUrl)!
-        
+
         //XMLパーサのデリゲート
         parser.delegate = self
-        
+
         //XMLパースの実行
         parser.parse()
     }
     
     //テーブルの行数を設定する ※必須
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
+
         //取得データの総数 ※要素数からとるようにすること！
-        return items.count
-        
+        return posts.count
     }
-    
+
     //テーブルの要素数を設定する ※必須
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-        
+
         //今回は1セクションだけ
         return sectionCount
-        
     }
     
     //表示するセルの中身を設定する ※必須
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        
+
         //Xibファイルを元にデータを作成する
-        var cell = tableView.dequeueReusableCellWithIdentifier("apiDataCell") as ApiDataTableViewCell;
-        var item = items[indexPath.row]
-        
+        var cell = tableView.dequeueReusableCellWithIdentifier("apiDataCell") as? ApiDataTableViewCell;
+
         //Xibのプロパティの中にそれぞれの要素名を入れる
-        //cell.okashiCategory?.text = item.maker as Stringと書くのもOK
-        
+
         //お菓子名
-        cell.okashiName?.text = "\(item.name)"
-        
+        cell!.okashiName.text = posts.objectAtIndex(indexPath.row).valueForKey("name") as? String
+
         //メーカー名
-        cell.okashiMaker?.text = "\(item.maker)"
-        
-        //カテゴリー ※nilの可能性があるものはあらかじめチェック
-        if(item.type != nil){
-            
-            //取得した文字列に応じて表記の変更
-            if(String(item.type) == "snack"){
-                cell.okashiCategory?.text = "スナック"
-            }else if(String(item.type) == "chocolate"){
-                cell.okashiCategory?.text = "チョコレート"
-            }else if(String(item.type) == "cookie"){
-                cell.okashiCategory?.text = "クッキー・洋菓子"
-            }else if(String(item.type) == "candy"){
-                cell.okashiCategory?.text = "飴・ガム"
-            }else if(String(item.type) == "senbei"){
-                cell.okashiCategory?.text = "せんべい・和風"
-            }
-            
+        cell!.okashiMaker?.text = posts.objectAtIndex(indexPath.row).valueForKey("maker") as? String
+
+        //カテゴリー ※取得した文字列に応じて表記の変更
+        var categoryParameter: String! = (posts.objectAtIndex(indexPath.row).valueForKey("type")!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding))
+
+        if(categoryParameter == "snack"){
+            cell!.okashiCategory?.text = "スナック"
+        }else if(categoryParameter == "chocolate"){
+            cell!.okashiCategory?.text = "チョコレート"
+        }else if(categoryParameter == "cookie"){
+            cell!.okashiCategory?.text = "クッキー・洋菓子"
+        }else if(categoryParameter == "candy"){
+            cell!.okashiCategory?.text = "飴・ガム"
+        }else if(categoryParameter == "senbei"){
+            cell!.okashiCategory?.text = "せんべい・和風"
         }else{
-            cell.okashiCategory?.text = "-"
+            cell!.okashiCategory?.text = "-"
         }
-        
+
         //価格 ※nilの可能性があるものはあらかじめチェック
-        if(item.price != nil){
-            cell.okashiPrice?.text = "\(item.price)"
+        var priceParameter: String = (posts.objectAtIndex(indexPath.row).valueForKey("price") as? String)!
+
+        if(priceParameter != ""){
+            cell!.okashiPrice?.text = priceParameter
         }else{
-            cell.okashiPrice?.text = "-"
+            cell!.okashiPrice?.text = "-"
         }
-        
+
         //画像 ※image要素のデータを取得した後にnilの可能性をチェック
         var q_global: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
         var q_main: dispatch_queue_t   = dispatch_get_main_queue();
-        
+
+        var imageParameter: String! = (posts.objectAtIndex(indexPath.row).valueForKey("image")!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding))
+
         //URLがあれば画像取得処理を実行
-        if(item.thumb != nil){
-            
+        if(imageParameter != ""){
+
             //サムネイルのURLをもとに画像データ(NSData型)を作成
-            var imageURL = NSURL(string: item.thumb as String)?
-            
+            var imageURL = NSURL(string: imageParameter)
+            println(imageURL)
+
             //非同期でURLデータを取得
             dispatch_async(q_global,{
-                
+
                 //サムネイルのURLをもとに画像データ(NSData型)を作成
-                var imageData = NSData(contentsOfURL: imageURL!)
+                var error: NSError?
+                var imageData = NSData(contentsOfURL: imageURL!, options: nil, error: &error)
+
+                if error != nil {
+                    //nilの時はデフォルトイメージを表示してあげる
+                    var image: UIImage = UIImage(named: "no_image.gif")!
+                    cell!.okashiImage?.image = image
+                }
                 
                 //更新はメインスレッドで行う
                 dispatch_async(q_main,{
-                    
+
                     //イメージデータがnilでなければサムネイル画像を表示
                     if((imageData) != nil){
                         
                         //xibのサムネイルエリアに表示する
                         var image: UIImage = UIImage(data: imageData!)!
-                        cell.okashiImage?.image = image
-                        cell.layoutSubviews()
+                        cell!.okashiImage?.image = image
+                        cell!.layoutSubviews()
                     }
                 })
             })
@@ -161,22 +198,22 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             
             //nilの時はデフォルトイメージを表示してあげる
             var image: UIImage = UIImage(named: "no_image.gif")!
-            cell.okashiImage?.image = image
+            cell!.okashiImage?.image = image
             
         }
         
         //セルの右に矢印をつけてあげる
-        cell.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator;
-        
-        return cell
+        cell!.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator;
+
+        return cell!
     }
     
     //セルをタップした時に呼び出される
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        
-        let item = items[indexPath.row]
-        let urlString:String = String(item.url)
-        
+
+        let post: AnyObject = posts[indexPath.row]
+        let urlString: String = (posts.objectAtIndex(indexPath.row).valueForKey("url") as? String)!
+
         //セグエの実行時に値を渡す
         performSegueWithIdentifier("toDetail", sender: urlString)
         
@@ -191,10 +228,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if segue.identifier == "toDetail"{
             
             //遷移先のコントローラーの変数を用意する
-            var detailViewController = segue.destinationViewController as DetailViewController
+            var detailViewController = segue.destinationViewController as! DetailViewController
             
             //遷移先のコントローラーに渡したい変数を格納（型を合わせてね）
-            detailViewController.urlString = sender as String
+            var urlParam : String
+            detailViewController.urlString = sender as! String
         }
     }
     
@@ -214,119 +252,100 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if(contentOffsetWidthWindow >= self.feedTableView.contentSize.height){
             
             //Explain. スクロールして一番下に行った際に次のページを読み込む処理をする際に活用
-            
         }
     }
     
-    //XMLをパースする処理
-    var currentElementName : String!
-    
-    //取得する要素名の決定(とりはじめの要素)
-    let itemElementName:String  = "item"
-    
-    //取得する要素名の決定(item要素の下にあるもの)
-    let nameElementName:String  = "name"
-    let makerElementName:String = "maker"
-    let priceElementName:String = "price"
-    let typeElementName:String  = "type"
-    let urlElementName:String   = "url"
-    let imageElementName:String = "image"
-    
-    //※XMLの中身がどのような構造をしているのかは下記のURLを直接たたいて確認をしてみてください
-    //http://www.sysbird.jp/webapi/?apikey=guest&max=30&order=r
-    
     //XMLパース処理実行開始時に行う処理
-    func parserDidStartDocument(parser: NSXMLParser!) {
+    func parserDidStartDocument(parser: NSXMLParser) {
     }
     
     //XMLパース処理実行中に行う処理（タグの最初を検出）
     //item要素を見つける ※上から順番に調べていくイメージです
-    func parser(parser: NSXMLParser!, didStartElement elementName: String!, namespaceURI: String!, qualifiedName qName: String!, attributes attributeDict: NSDictionary!) {
+    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [NSObject : AnyObject]) {
         
-        currentElementName = nil
-        
-        if elementName == itemElementName {
-            
-            //読み込んだXMLでitem要素を見つけたらitemクラスのインスタンスを入れる
-            //※空っぽの入れ物だけを準備してあげるイメージです
-            items.append(Item())
-            
-        } else {
-            
-            //item要素じゃなければ単純に現在位置をcurrentElementNameに入れておく
-            currentElementName = elementName
-            
+        element = elementName
+        if (elementName as NSString).isEqualToString(itemElementName){
+            elements = NSMutableDictionary.alloc()
+            elements = [:]
+            name = NSMutableString.alloc()
+            name = ""
+            maker = NSMutableString.alloc()
+            maker = ""
+            price = NSMutableString.alloc()
+            price = ""
+            type = NSMutableString.alloc()
+            type = ""
+            url = NSMutableString.alloc()
+            url = ""
+            image = NSMutableString.alloc()
+            image = ""
         }
-    }
-    
-    //XMLパース処理実行中に行う処理（タグの最後を検出）
-    func parser(parser: NSXMLParser!, didEndElement elementName: String!, namespaceURI: String!, qualifiedName qName: String!) {
-        
-        currentElementName = nil;
     }
     
     //XMLパース処理実行中に行う処理（実際のパース処理）
     //item要素内からさらにname・url・price・maker・url・image要素を見つけてitem要素を見つけた際に用意した入れ物に入れてあげる
-    func parser(parser: NSXMLParser!, foundCharacters string: String!){
-        
-        //itemsの中に空っぽの入れ物が準備できている場合の処理
-        if items.count > 0 {
-            
-            //空っぽの入れ物のなかにそれぞれの要素の文字列を入れる
-            var lastItem = items[items.count-1]
-            if currentElementName? == nameElementName {
-                
-                //name要素を入れる
-                //一番最初に取ってくるものについてはこの書き方（もしname要素内にすでに値があったら追記する）
-                var tmpString : String? = lastItem.name
-                lastItem.name = (tmpString != nil) ? tmpString! + string : string
-                
-            } else if currentElementName? == urlElementName {
-                
-                //url要素を入れる
-                lastItem.url = string
-                
-            } else if currentElementName? == makerElementName {
-                
-                //maker要素を入れる
-                lastItem.maker = string
-                
-            } else if currentElementName? == typeElementName {
-                
-                //type要素を入れる
-                lastItem.type = string
-                
-            } else if currentElementName? == priceElementName {
-                
-                //price要素を入れる
-                lastItem.price = string
-                
-            } else if currentElementName? == imageElementName {
-                
-                //image要素を入れる
-                lastItem.thumb = string
-                
-            }
+    func parser(parser: NSXMLParser, foundCharacters string: String?){
+
+        if element.isEqualToString(nameElementName) {
+            name.appendString( strip(string!) )
+        } else if element.isEqualToString(makerElementName) {
+            maker.appendString( strip(string!) )
+        } else if element.isEqualToString(priceElementName) {
+            price.appendString( strip(string!) )
+        } else if element.isEqualToString(typeElementName) {
+            type.appendString( strip(string!) )
+        } else if element.isEqualToString(urlElementName) {
+            url.appendString( strip(string!) )
+        } else if element.isEqualToString(imageElementName) {
+            image.appendString( strip(string!) )
         }
     }
-    
+
+    //XMLパース処理実行中に行う処理（タグの最後を検出）
+    func parser(parser: NSXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
+        
+        if (elementName as NSString).isEqualToString(itemElementName) {
+            
+            if !name.isEqual(nil) {
+                elements.setObject(name, forKey: nameElementName)
+            }
+            if !maker.isEqual(nil) {
+                elements.setObject(maker, forKey: makerElementName)
+            }
+            if !price.isEqual(nil) {
+                elements.setObject(price, forKey: priceElementName)
+            }
+            if !type.isEqual(nil) {
+                elements.setObject(type, forKey: typeElementName)
+            }
+            if !url.isEqual(nil) {
+                elements.setObject(url, forKey: urlElementName)
+            }
+            if !image.isEqual(nil) {
+                elements.setObject(image, forKey: imageElementName)
+            }
+            posts.addObject(elements)
+        }
+
+    }
+
     //XMLパース処理実行終了時に行う処理
-    func parserDidEndDocument(parser: NSXMLParser!)
-    {
+    func parserDidEndDocument(parser: NSXMLParser) {
         self.feedTableView.reloadData()
         
         //Debug.要素が取れているかの確認用
-        //println(items)
+        //println(posts)
     }
     
-    //XMLから取得した値を保持するだけのクラス
-    class Item {
-        var name:  String! //item要素の下のname要素を入れる
-        var maker: String! //item要素の下のmaker要素を入れる
-        var price: String! //item要素の下のprice要素を入れる
-        var type:  String! //item要素の下のtype要素を入れる
-        var url:   String! //item要素の下のurl要素を入れる
-        var thumb: String! //item要素の下のimage要素を入れる
+    //改行と半角スペースの除去
+    func strip(str: String) -> String {
+        var strBr: String
+        var strSp: String
+        //改行除去
+        strBr = str.stringByReplacingOccurrencesOfString("\n", withString: "", options: nil, range: nil)
+        //半角スペース除去
+        strSp = strBr.stringByReplacingOccurrencesOfString(" ", withString: "", options: nil, range: nil)
+        return strSp
     }
     
     override func didReceiveMemoryWarning() {
