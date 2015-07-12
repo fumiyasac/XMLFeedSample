@@ -165,7 +165,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
 
             //サムネイルのURLをもとに画像データ(NSData型)を作成
             var imageURL = NSURL(string: imageParameter)
-            println(imageURL)
 
             //非同期でURLデータを取得
             dispatch_async(q_global,{
