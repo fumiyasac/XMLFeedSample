@@ -87,11 +87,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         self.feedTableView.dataSource = self
 
         //Xibのクラスを読み込む宣言を行う
-        var nib:UINib = UINib(nibName: "ApiDataTableViewCell", bundle: nil)
+        let nib:UINib = UINib(nibName: "ApiDataTableViewCell", bundle: nil)
         self.feedTableView.registerNib(nib, forCellReuseIdentifier: "apiDataCell")
 
         //NSXMLParserクラスのインスタンスを準備
-        var parser : NSXMLParser = NSXMLParser(contentsOfURL: feedUrl)!
+        let parser : NSXMLParser = NSXMLParser(contentsOfURL: feedUrl)!
 
         //XMLパーサのデリゲート
         parser.delegate = self
@@ -118,7 +118,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
 
         //Xibファイルを元にデータを作成する
-        var cell = tableView.dequeueReusableCellWithIdentifier("apiDataCell") as? ApiDataTableViewCell;
+        let cell = tableView.dequeueReusableCellWithIdentifier("apiDataCell") as? ApiDataTableViewCell;
 
         //Xibのプロパティの中にそれぞれの要素名を入れる
 
@@ -129,7 +129,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         cell!.okashiMaker?.text = posts.objectAtIndex(indexPath.row).valueForKey("maker") as? String
 
         //カテゴリー ※取得した文字列に応じて表記の変更
-        var categoryParameter: String! = (posts.objectAtIndex(indexPath.row).valueForKey("type")!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding))
+        let categoryParameter: String! = (posts.objectAtIndex(indexPath.row).valueForKey("type")!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding))
 
         if(categoryParameter == "snack"){
             cell!.okashiCategory?.text = "スナック"
@@ -146,7 +146,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }
 
         //価格 ※nilの可能性があるものはあらかじめチェック
-        var priceParameter: String = (posts.objectAtIndex(indexPath.row).valueForKey("price") as? String)!
+        let priceParameter: String = (posts.objectAtIndex(indexPath.row).valueForKey("price") as? String)!
 
         if(priceParameter != ""){
             cell!.okashiPrice?.text = priceParameter
@@ -155,27 +155,35 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }
 
         //画像 ※image要素のデータを取得した後にnilの可能性をチェック
-        var q_global: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-        var q_main: dispatch_queue_t   = dispatch_get_main_queue();
+        let q_global: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        let q_main: dispatch_queue_t   = dispatch_get_main_queue();
 
-        var imageParameter: String! = (posts.objectAtIndex(indexPath.row).valueForKey("image")!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding))
+        let imageParameter: String! = (posts.objectAtIndex(indexPath.row).valueForKey("image")!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding))
 
         //URLがあれば画像取得処理を実行
         if(imageParameter != ""){
 
             //サムネイルのURLをもとに画像データ(NSData型)を作成
-            var imageURL = NSURL(string: imageParameter)
+            let imageURL = NSURL(string: imageParameter)
 
             //非同期でURLデータを取得
             dispatch_async(q_global,{
 
                 //サムネイルのURLをもとに画像データ(NSData型)を作成
                 var error: NSError?
-                var imageData = NSData(contentsOfURL: imageURL!, options: nil, error: &error)
+                var imageData: NSData?
+                do {
+                    imageData = try NSData(contentsOfURL: imageURL!, options: [])
+                } catch let error1 as NSError {
+                    error = error1
+                    imageData = nil
+                } catch {
+                    fatalError()
+                }
 
                 if error != nil {
                     //nilの時はデフォルトイメージを表示してあげる
-                    var image: UIImage = UIImage(named: "no_image.gif")!
+                    let image: UIImage = UIImage(named: "no_image.gif")!
                     cell!.okashiImage?.image = image
                 }
                 
@@ -186,7 +194,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     if((imageData) != nil){
                         
                         //xibのサムネイルエリアに表示する
-                        var image: UIImage = UIImage(data: imageData!)!
+                        let image: UIImage = UIImage(data: imageData!)!
                         cell!.okashiImage?.image = image
                         cell!.layoutSubviews()
                     }
@@ -196,7 +204,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }else{
             
             //nilの時はデフォルトイメージを表示してあげる
-            var image: UIImage = UIImage(named: "no_image.gif")!
+            let image: UIImage = UIImage(named: "no_image.gif")!
             cell!.okashiImage?.image = image
             
         }
@@ -227,7 +235,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if segue.identifier == "toDetail"{
             
             //遷移先のコントローラーの変数を用意する
-            var detailViewController = segue.destinationViewController as! DetailViewController
+            let detailViewController = segue.destinationViewController as! DetailViewController
             
             //遷移先のコントローラーに渡したい変数を格納（型を合わせてね）
             var urlParam : String
@@ -247,7 +255,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     //下にスクロールでコンテンツの追加読み込み ※任意
     func scrollViewDidScroll(scrollView: UIScrollView) {
-        var contentOffsetWidthWindow: CGFloat = self.feedTableView.contentOffset.y + self.feedTableView.bounds.size.height
+        let contentOffsetWidthWindow: CGFloat = self.feedTableView.contentOffset.y + self.feedTableView.bounds.size.height
         if(contentOffsetWidthWindow >= self.feedTableView.contentSize.height){
             
             //Explain. スクロールして一番下に行った際に次のページを読み込む処理をする際に活用
@@ -260,43 +268,43 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     //XMLパース処理実行中に行う処理（タグの最初を検出）
     //item要素を見つける ※上から順番に調べていくイメージです
-    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [NSObject : AnyObject]) {
+    func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String]) {
         
         element = elementName
         if (elementName as NSString).isEqualToString(itemElementName){
-            elements = NSMutableDictionary.alloc()
+            elements = NSMutableDictionary()
             elements = [:]
-            name = NSMutableString.alloc()
+            name = NSMutableString()
             name = ""
-            maker = NSMutableString.alloc()
+            maker = NSMutableString()
             maker = ""
-            price = NSMutableString.alloc()
+            price = NSMutableString()
             price = ""
-            type = NSMutableString.alloc()
+            type = NSMutableString()
             type = ""
-            url = NSMutableString.alloc()
+            url = NSMutableString()
             url = ""
-            image = NSMutableString.alloc()
+            image = NSMutableString()
             image = ""
         }
     }
     
     //XMLパース処理実行中に行う処理（実際のパース処理）
     //item要素内からさらにname・url・price・maker・url・image要素を見つけてitem要素を見つけた際に用意した入れ物に入れてあげる
-    func parser(parser: NSXMLParser, foundCharacters string: String?){
+    func parser(parser: NSXMLParser, foundCharacters string: String){
 
         if element.isEqualToString(nameElementName) {
-            name.appendString( strip(string!) )
+            name.appendString( strip(string) )
         } else if element.isEqualToString(makerElementName) {
-            maker.appendString( strip(string!) )
+            maker.appendString( strip(string) )
         } else if element.isEqualToString(priceElementName) {
-            price.appendString( strip(string!) )
+            price.appendString( strip(string) )
         } else if element.isEqualToString(typeElementName) {
-            type.appendString( strip(string!) )
+            type.appendString( strip(string) )
         } else if element.isEqualToString(urlElementName) {
-            url.appendString( strip(string!) )
+            url.appendString( strip(string) )
         } else if element.isEqualToString(imageElementName) {
-            image.appendString( strip(string!) )
+            image.appendString( strip(string) )
         }
     }
 
@@ -341,9 +349,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         var strBr: String
         var strSp: String
         //改行除去
-        strBr = str.stringByReplacingOccurrencesOfString("\n", withString: "", options: nil, range: nil)
+        strBr = str.stringByReplacingOccurrencesOfString("\n", withString: "", options: [], range: nil)
         //半角スペース除去
-        strSp = strBr.stringByReplacingOccurrencesOfString(" ", withString: "", options: nil, range: nil)
+        strSp = strBr.stringByReplacingOccurrencesOfString(" ", withString: "", options: [], range: nil)
         return strSp
     }
     

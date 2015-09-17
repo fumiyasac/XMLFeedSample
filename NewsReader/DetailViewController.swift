@@ -35,8 +35,8 @@ class DetailViewController: UIViewController {
         super.viewDidLoad()
         
         //ViewControllerから渡ってきたURLを表示します
-        var url = NSURL(string: self.urlString)
-        var request = NSURLRequest(URL: url!)
+        let url = NSURL(string: self.urlString)
+        let request = NSURLRequest(URL: url!)
         
         //WebViewでURLを表示
         feedDetailWebView.loadRequest(request)
