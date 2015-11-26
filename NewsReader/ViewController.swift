@@ -305,23 +305,33 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }
         
         if self.element.isEqualToString(self.makerElementName) {
-            self.maker.appendString( strip(string) )
+            self.maker.appendString(
+                strip(string)
+            )
         }
         
         if self.element.isEqualToString(self.priceElementName) {
-            self.price.appendString( strip(string) )
+            self.price.appendString(
+                strip(string)
+            )
         }
         
         if self.element.isEqualToString(self.typeElementName) {
-            self.type.appendString( strip(string) )
+            self.type.appendString(
+                strip(string)
+            )
         }
         
         if self.element.isEqualToString(self.urlElementName) {
-            self.url.appendString( strip(string) )
+            self.url.appendString(
+                strip(string)
+            )
         }
         
         if self.element.isEqualToString(self.imageElementName) {
-            self.image.appendString( strip(string) )
+            self.image.appendString(
+                strip(string)
+            )
         }
     }
 
