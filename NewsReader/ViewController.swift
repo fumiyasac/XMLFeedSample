@@ -58,23 +58,23 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     let itemElementName : String  = "item"
 
     //取得する要素名の決定(item要素の下にあるもの)
-    let nameElementName : String  = "name"
+    let nameElementName  : String = "name"
     let makerElementName : String = "maker"
     let priceElementName : String = "price"
-    let typeElementName : String  = "type"
-    let urlElementName : String   = "url"
+    let typeElementName  : String = "type"
+    let urlElementName   : String = "url"
     let imageElementName : String = "image"
 
     //各エレメント用の変数
-    var posts = NSMutableArray()
+    var posts    = NSMutableArray()
     var elements = NSMutableDictionary()
-    var element = NSString()
-    var name = NSMutableString()
-    var maker = NSMutableString()
-    var price = NSMutableString()
-    var type = NSMutableString()
-    var url = NSMutableString()
-    var image = NSMutableString()
+    var element  = NSString()
+    var name     = NSMutableString()
+    var maker    = NSMutableString()
+    var price    = NSMutableString()
+    var type     = NSMutableString()
+    var url      = NSMutableString()
+    var image    = NSMutableString()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -131,26 +131,33 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         //カテゴリー ※取得した文字列に応じて表記の変更
         let categoryParameter: String! = (posts.objectAtIndex(indexPath.row).valueForKey("type")!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding))
 
-        if(categoryParameter == "snack"){
-            cell!.okashiCategory?.text = "スナック"
-        }else if(categoryParameter == "chocolate"){
-            cell!.okashiCategory?.text = "チョコレート"
-        }else if(categoryParameter == "cookie"){
-            cell!.okashiCategory?.text = "クッキー・洋菓子"
-        }else if(categoryParameter == "candy"){
-            cell!.okashiCategory?.text = "飴・ガム"
-        }else if(categoryParameter == "senbei"){
-            cell!.okashiCategory?.text = "せんべい・和風"
-        }else{
-            cell!.okashiCategory?.text = "-"
+        switch(categoryParameter){
+            case "snack":
+                cell!.okashiCategory?.text = "スナック"
+                break
+            case "chocolate":
+                cell!.okashiCategory?.text = "チョコレート"
+                break
+            case "cookie":
+                cell!.okashiCategory?.text = "クッキー・洋菓子"
+                break
+            case "candy":
+                cell!.okashiCategory?.text = "飴・ガム"
+                break
+            case "senbei":
+                cell!.okashiCategory?.text = "せんべい・和風"
+                break
+            default:
+                cell!.okashiCategory?.text = "-"
+                break
         }
 
         //価格 ※nilの可能性があるものはあらかじめチェック
         let priceParameter: String = (posts.objectAtIndex(indexPath.row).valueForKey("price") as? String)!
 
-        if(priceParameter != ""){
+        if priceParameter != "" {
             cell!.okashiPrice?.text = priceParameter
-        }else{
+        } else {
             cell!.okashiPrice?.text = "-"
         }
 
@@ -161,7 +168,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let imageParameter: String! = (posts.objectAtIndex(indexPath.row).valueForKey("image")!.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding))
 
         //URLがあれば画像取得処理を実行
-        if(imageParameter != ""){
+        if imageParameter != "" {
 
             //サムネイルのURLをもとに画像データ(NSData型)を作成
             let imageURL = NSURL(string: imageParameter)
@@ -172,16 +179,23 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 //サムネイルのURLをもとに画像データ(NSData型)を作成
                 var error: NSError?
                 var imageData: NSData?
+                
+                //データが取得できれば正常処理
                 do {
                     imageData = try NSData(contentsOfURL: imageURL!, options: [])
+                    
+                //Errorが返された場合はimageDataにnilを入れる
                 } catch let error1 as NSError {
                     error = error1
                     imageData = nil
+                
+                //それ以外の例外
                 } catch {
                     fatalError()
                 }
 
                 if error != nil {
+                    
                     //nilの時はデフォルトイメージを表示してあげる
                     let image: UIImage = UIImage(named: "no_image.gif")!
                     cell!.okashiImage?.image = image
@@ -201,7 +215,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 })
             })
             
-        }else{
+        } else {
             
             //nilの時はデフォルトイメージを表示してあげる
             let image: UIImage = UIImage(named: "no_image.gif")!
@@ -218,7 +232,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     //セルをタップした時に呼び出される
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
 
-        let post: AnyObject = posts[indexPath.row]
         let urlString: String = (posts.objectAtIndex(indexPath.row).valueForKey("url") as? String)!
 
         //セグエの実行時に値を渡す
@@ -232,13 +245,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
         //セグエ名で判定を行う
-        if segue.identifier == "toDetail"{
+        if segue.identifier == "toDetail" {
             
             //遷移先のコントローラーの変数を用意する
             let detailViewController = segue.destinationViewController as! DetailViewController
             
             //遷移先のコントローラーに渡したい変数を格納（型を合わせてね）
-            var urlParam : String
             detailViewController.urlString = sender as! String
         }
     }
@@ -270,22 +282,15 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     //item要素を見つける ※上から順番に調べていくイメージです
     func parser(parser: NSXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String]) {
         
-        element = elementName
-        if (elementName as NSString).isEqualToString(itemElementName){
-            elements = NSMutableDictionary()
-            elements = [:]
-            name = NSMutableString()
-            name = ""
-            maker = NSMutableString()
-            maker = ""
-            price = NSMutableString()
-            price = ""
-            type = NSMutableString()
-            type = ""
-            url = NSMutableString()
-            url = ""
-            image = NSMutableString()
-            image = ""
+        self.element = elementName
+        if (elementName as NSString).isEqualToString(self.itemElementName){
+            self.elements = [:]
+            self.name = ""
+            self.maker = ""
+            self.price = ""
+            self.type = ""
+            self.url = ""
+            self.image = ""
         }
     }
     
@@ -293,45 +298,62 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     //item要素内からさらにname・url・price・maker・url・image要素を見つけてitem要素を見つけた際に用意した入れ物に入れてあげる
     func parser(parser: NSXMLParser, foundCharacters string: String){
 
-        if element.isEqualToString(nameElementName) {
-            name.appendString( strip(string) )
-        } else if element.isEqualToString(makerElementName) {
-            maker.appendString( strip(string) )
-        } else if element.isEqualToString(priceElementName) {
-            price.appendString( strip(string) )
-        } else if element.isEqualToString(typeElementName) {
-            type.appendString( strip(string) )
-        } else if element.isEqualToString(urlElementName) {
-            url.appendString( strip(string) )
-        } else if element.isEqualToString(imageElementName) {
-            image.appendString( strip(string) )
+        if self.element.isEqualToString(self.nameElementName) {
+            self.name.appendString(
+                strip(string)
+            )
+        }
+        
+        if self.element.isEqualToString(self.makerElementName) {
+            self.maker.appendString( strip(string) )
+        }
+        
+        if self.element.isEqualToString(self.priceElementName) {
+            self.price.appendString( strip(string) )
+        }
+        
+        if self.element.isEqualToString(self.typeElementName) {
+            self.type.appendString( strip(string) )
+        }
+        
+        if self.element.isEqualToString(self.urlElementName) {
+            self.url.appendString( strip(string) )
+        }
+        
+        if self.element.isEqualToString(self.imageElementName) {
+            self.image.appendString( strip(string) )
         }
     }
 
     //XMLパース処理実行中に行う処理（タグの最後を検出）
     func parser(parser: NSXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         
-        if (elementName as NSString).isEqualToString(itemElementName) {
+        if (elementName as NSString).isEqualToString(self.itemElementName) {
             
-            if !name.isEqual(nil) {
-                elements.setObject(name, forKey: nameElementName)
+            if !self.name.isEqual(nil) {
+                self.elements.setObject(self.name, forKey: self.nameElementName)
             }
-            if !maker.isEqual(nil) {
-                elements.setObject(maker, forKey: makerElementName)
+            
+            if !self.maker.isEqual(nil) {
+                self.elements.setObject(self.maker, forKey: self.makerElementName)
             }
-            if !price.isEqual(nil) {
-                elements.setObject(price, forKey: priceElementName)
+            
+            if !self.price.isEqual(nil) {
+                self.elements.setObject(self.price, forKey: self.priceElementName)
             }
-            if !type.isEqual(nil) {
-                elements.setObject(type, forKey: typeElementName)
+            
+            if !self.type.isEqual(nil) {
+                self.elements.setObject(self.type, forKey: self.typeElementName)
             }
-            if !url.isEqual(nil) {
-                elements.setObject(url, forKey: urlElementName)
+            
+            if !self.url.isEqual(nil) {
+                self.elements.setObject(self.url, forKey: self.urlElementName)
             }
-            if !image.isEqual(nil) {
-                elements.setObject(image, forKey: imageElementName)
+            
+            if !self.image.isEqual(nil) {
+                self.elements.setObject(self.image, forKey: self.imageElementName)
             }
-            posts.addObject(elements)
+            self.posts.addObject(self.elements)
         }
 
     }
@@ -346,10 +368,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     //改行と半角スペースの除去
     func strip(str: String) -> String {
+        
         var strBr: String
         var strSp: String
+        
         //改行除去
         strBr = str.stringByReplacingOccurrencesOfString("\n", withString: "", options: [], range: nil)
+        
         //半角スペース除去
         strSp = strBr.stringByReplacingOccurrencesOfString(" ", withString: "", options: [], range: nil)
         return strSp
